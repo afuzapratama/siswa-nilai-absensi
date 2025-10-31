@@ -169,7 +169,9 @@ class Siswa extends BaseController
 
         $file = $this->request->getFile('file_csv');
 
-        if (!$file || !$file->isValid() || $file->getMimeType() !== 'text/csv') {
+        $mime = $file->getMimeType();
+        $allowed = ['text/csv', 'text/plain', 'application/vnd.ms-excel'];
+        if (!$file || !$file->isValid() || !in_array($mime, $allowed, true)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'File tidak valid. Harap upload file .csv']);
         }
 
@@ -205,9 +207,9 @@ class Siswa extends BaseController
                 continue;
             }
 
-            $nama_siswa = mb_strtoupper(trim($row[0]), 'UTF-8');
-            $nis = trim($row[1]);
-            $kode_kelas = strtoupper(trim($row[2]));
+            $nama_siswa = mb_strtoupper(trim($row[0] ?? ''), 'UTF-8');
+            $nis        = trim((string)($row[1] ?? ''));
+            $kode_kelas = strtoupper(trim($row[2] ?? ''));
 
             // Validasi 1: Cek nama
             if (empty($nama_siswa)) {
@@ -241,17 +243,17 @@ class Siswa extends BaseController
 
         // Simpan ke database
         if (!empty($data_to_insert)) {
-            try {
-                $this->siswaModel->insertBatch($data_to_insert);
-            } catch (\Exception $e) {
-                // Tangani error (misal: duplicate entry)
+            $result = $this->siswaModel->insertBatch($data_to_insert);
+            if ($result === false) {
+                // saat database.debug=false, error tidak menjadi exception => ambil dari $db->error()
+                $dbError = $this->siswaModel->db->error();  // ['code' => ..., 'message' => ...]
                 return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Terjadi error saat menyimpan data: ' . $e->getMessage()
+                    'status'  => 'error',
+                    'message' => 'Gagal menyimpan data batch: ' . ($dbError['message'] ?? 'unknown error'),
                 ]);
             }
         }
-
+        
         $message = "Import Selesai. $sukses_count data berhasil disiapkan, $gagal_count data gagal.";
         if (!empty($errors)) {
             $message .= " Detail Kegagalan: " . implode(" | ", array_slice($errors, 0, 5)); // Tampilkan 5 error pertama

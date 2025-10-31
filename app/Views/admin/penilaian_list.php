@@ -51,7 +51,10 @@
                                 </td>
                                 <td><?= esc($form['nama_kelas']) ?></td>
                                 <td><?= esc($form['nama_mapel']) ?></td>
-                                <td><?= esc(date('d-m-Y H:i', strtotime($form['created_at'] ?? time()))) ?></td>
+                                <td>
+                                <?= esc(\CodeIgniter\I18n\Time::parse($form['created_at'] ?? 'now')
+                                        ->setTimezone('Asia/Jakarta')->format('d-m-Y H:i')) ?>
+                                </td>
                                 <td>
                                     <a href="<?= site_url('admin/penilaian/form/' . $form['id_header']) ?>" class="btn btn-sm btn-info">
                                         <i class="fas fa-edit"></i> Input Nilai
