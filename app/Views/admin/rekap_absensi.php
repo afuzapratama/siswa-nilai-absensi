@@ -1,289 +1,325 @@
-<?= $this->extend('layout/template') ?>
+<?= $this->extend('layout/app') ?>
 
 <?= $this->section('content') ?>
-<div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800"><?= $title ?></h1>
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900"><?= $title ?></h1>
+        <p class="mt-1 text-sm text-gray-500">Lihat rekap kehadiran siswa berdasarkan periode, kelas dan mata pelajaran</p>
+    </div>
 
-    <!-- Card Filter -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Filter Laporan Kehadiran</h6>
+    <!-- Filter Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Filter Laporan Kehadiran</h3>
         </div>
         <div class="card-body">
-            <form id="filterRekapAbsensi">
-                <?= csrf_field() ?>
-                <div class="row">
+            <form id="filterRekapAbsensi" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Tanggal Mulai -->
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="tanggal_mulai">Dari Tanggal</label>
-                            <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="<?= date('Y-m-01') ?>" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="tanggal_mulai" class="form-label">Dari Tanggal <span class="text-red-500">*</span></label>
+                        <input type="date" 
+                               class="form-input" 
+                               id="tanggal_mulai" 
+                               name="tanggal_mulai" 
+                               value="<?= date('Y-m-01') ?>" 
+                               required>
                     </div>
 
                     <!-- Tanggal Selesai -->
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="tanggal_selesai">Sampai Tanggal</label>
-                            <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai" value="<?= date('Y-m-t') ?>" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="tanggal_selesai" class="form-label">Sampai Tanggal <span class="text-red-500">*</span></label>
+                        <input type="date" 
+                               class="form-input" 
+                               id="tanggal_selesai" 
+                               name="tanggal_selesai" 
+                               value="<?= date('Y-m-t') ?>" 
+                               required>
                     </div>
 
                     <!-- Pilih Kelas -->
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="id_kelas_absensi">Pilih Kelas</label> <!-- ID unik -->
-                            <select class="form-control" id="id_kelas_absensi" name="id_kelas" required>
-                                <option value="">-- Pilih Kelas --</option>
-                                <?php foreach ($kelas_list as $kelas) : ?>
-                                    <option value="<?= $kelas['id_kelas'] ?>">
-                                        <?= esc($kelas['nama_kelas']) ?> (<?= esc($kelas['kode_kelas']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="id_kelas" class="form-label">Pilih Kelas <span class="text-red-500">*</span></label>
+                        <select class="form-input" id="id_kelas" name="id_kelas" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            <?php foreach ($kelas_list as $kelas) : ?>
+                                <option value="<?= $kelas['id_kelas'] ?>">
+                                    <?= esc($kelas['nama_kelas']) ?> (<?= esc($kelas['kode_kelas']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <!-- Pilih Mata Pelajaran -->
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="id_mapel_absensi">Pilih Mata Pelajaran</label> <!-- ID unik -->
-                            <select class="form-control" id="id_mapel_absensi" name="id_mapel" required>
-                                <option value="">-- Pilih Kelas Dulu --</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="id_mapel" class="form-label">Pilih Mata Pelajaran <span class="text-red-500">*</span></label>
+                        <select class="form-input" id="id_mapel" name="id_mapel" required disabled>
+                            <option value="">-- Pilih Kelas Dulu --</option>
+                        </select>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary" id="btnTerapkan">
-                    <i class="fas fa-search"></i> Terapkan
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Terapkan
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Card Hasil Laporan -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Hasil Rekap Kehadiran</h6>
-            <div>
-                <button type="button" class="btn btn-success" id="btnExportCSV" disabled>
-                    <i class="fas fa-file-csv"></i> Export CSV
+    <!-- Hasil Rekap Card -->
+    <div class="card">
+        <div class="card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h3 class="card-title">Hasil Rekap Kehadiran</h3>
+            <div class="flex items-center gap-2">
+                <button type="button" class="btn btn-success btn-sm" id="btnExportCSV" disabled>
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export CSV
                 </button>
-                <button type="button" class="btn btn-danger" id="btnExportPDF" disabled>
-                    <i class="fas fa-file-pdf"></i> Export PDF
+                <button type="button" class="btn btn-danger btn-sm" id="btnExportPDF" disabled>
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    Export PDF
                 </button>
             </div>
         </div>
-        <div class="card-body">
-            <!-- Tempat tabel AJAX di-load -->
-            <div id="tabelRekapContainer">
-                <div class="text-center text-muted">
-                    Silakan pilih filter di atas dan klik "Terapkan" untuk menampilkan rekap.
+        <div class="card-body p-0">
+            <div id="tabelRekapContainer" class="p-6">
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p>Silakan pilih filter di atas dan klik "Terapkan" untuk menampilkan rekap.</p>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Modal Loading Bootstrap 4 -->
-    <div class="modal fade" id="loadingExport" tabindex="-1" data-backdrop="static" data-keyboard="false" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content text-center p-4">
-                <div class="spinner-border mb-2" role="status" aria-hidden="true"></div>
-                <div>Menyiapkan PDF...</div>
+
+    <!-- Legend -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <p class="text-xs font-medium text-gray-700 mb-2">Keterangan Bobot Kehadiran:</p>
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+            <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-green-600 rounded"></span>
+                <span>Hadir (H) = 100%</span>
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-orange-500 rounded"></span>
+                <span>Sakit (S) = 90%</span>
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-yellow-500 rounded"></span>
+                <span>Izin (I) = 70%</span>
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-4 h-4 bg-red-600 rounded"></span>
+                <span>Alpa (A) = 0%</span>
+            </span>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">* Persentase kehadiran dihitung berdasarkan total poin dibagi jumlah pertemuan</p>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal" id="loadingExport">
+    <div class="modal-backdrop"></div>
+    <div class="modal-container">
+        <div class="modal-content max-w-xs">
+            <div class="p-8 text-center">
+                <svg class="w-10 h-10 mx-auto text-blue-500 animate-spin mb-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-gray-700 font-medium">Menyiapkan PDF...</p>
+                <p class="text-sm text-gray-500 mt-1">Mohon tunggu sebentar</p>
             </div>
         </div>
     </div>
-
-
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('js') ?>
-<!-- Script khusus untuk Halaman Rekap Absensi -->
-<script>
-    $(document).ready(function() {
+<?= $this->section('scripts') ?>
+<script type="module">
+    const csrfName = document.querySelector('meta[name="csrf-name"]').content;
+    let csrfHash = document.querySelector('meta[name="csrf-token"]').content;
+    const baseUrl = document.querySelector('meta[name="base-url"]').content;
 
-        // 1. AJAX: Ambil Mata Pelajaran saat Kelas dipilih
-        $('#id_kelas_absensi').on('change', function() { // Target ID unik
-            let id_kelas = $(this).val();
-            let selectMapel = $('#id_mapel_absensi'); // Target ID unik
+    // Elements
+    const formFilter = document.getElementById('filterRekapAbsensi');
+    const selectKelas = document.getElementById('id_kelas');
+    const selectMapel = document.getElementById('id_mapel');
+    const btnTerapkan = document.getElementById('btnTerapkan');
+    const container = document.getElementById('tabelRekapContainer');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnExportPDF = document.getElementById('btnExportPDF');
+    const loadingModal = document.getElementById('loadingExport');
 
-            selectMapel.html('<option value="">Loading...</option>');
+    // Toast function
+    function showToast(message, type = 'info') {
+        const bgColors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 ${bgColors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-up`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 
-            if (!id_kelas) {
-                selectMapel.html('<option value="">-- Pilih Kelas Dulu --</option>');
-                return;
-            }
+    // Get Mapel by Kelas
+    selectKelas.addEventListener('change', async function() {
+        const id_kelas = this.value;
+        selectMapel.innerHTML = '<option value="">Loading...</option>';
+        selectMapel.disabled = true;
 
-            $.ajax({
-                url: '<?= site_url('admin/absensi/ajax-get-mapel') ?>', // [FIX] Rute yang benar
-                type: 'POST',
-                data: {
-                    id_kelas: id_kelas,
-                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
-                },
-                dataType: 'JSON',
-                success: function(response) {
-                    selectMapel.html('<option value="">-- Pilih Mata Pelajaran --</option>');
-                    if (response.status === 'success') {
-                        $.each(response.mapel, function(key, value) {
-                            selectMapel.append('<option value="' + value.id_mapel + '">' + value.nama_mapel + '</option>');
-                        });
-                    }
-                },
-                error: function() {
-                    selectMapel.html('<option value="">Gagal memuat mapel</option>');
-                }
-            });
-        });
-
-        // 2. AJAX: Tombol "Terapkan"
-        $('#filterRekapAbsensi').on('submit', function(e) {
-            e.preventDefault();
-            let btn = $('#btnTerapkan');
-            let container = $('#tabelRekapContainer');
-            let formData = $(this).serialize();
-
-            $.ajax({
-                url: '<?= site_url('admin/rekap-absensi/tampilkan-data') ?>', // [FIX] Rute yang benar (tanpa typo '1')
-                type: 'POST',
-                data: formData,
-                beforeSend: function() {
-                    btn.prop('disabled', true).html('<i class="fas fa-spin fa-spinner"></i> Menerapkan...');
-                    container.html('<div class="text-center text-muted py-5"><i class="fas fa-spin fa-spinner fa-2x"></i><br>Memuat data...</div>');
-                    $('#btnExportCSV').prop('disabled', true);
-                    $('#btnExportPDF').prop('disabled', true);
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('<i class="fas fa-search"></i> Terapkan');
-                },
-                success: function(response) {
-                    container.html(response);
-                    $('#btnExportCSV').prop('disabled', false);
-                    $('#btnExportPDF').prop('disabled', false);
-                },
-                error: function() {
-                    container.html('<div class="alert alert-danger text-center">Gagal memuat data. Silakan coba lagi.</div>');
-                }
-            });
-        });
-
-        // Helper untuk Export
-        function getExportUrl(format) {
-            let params = {
-                tanggal_mulai: $('#tanggal_mulai').val(),
-                tanggal_selesai: $('#tanggal_selesai').val(),
-                id_kelas: $('#id_kelas_absensi').val(), // Target ID unik
-                id_mapel: $('#id_mapel_absensi').val() // Target ID unik
-            };
-            let baseUrl = '<?= site_url('admin/rekap-absensi/export-csv') ?>'.replace('export-csv', format);
-            return baseUrl + '?' + $.param(params);
+        if (!id_kelas) {
+            selectMapel.innerHTML = '<option value="">-- Pilih Kelas Dulu --</option>';
+            return;
         }
 
-        // 3. Tombol Export CSV
-        $('#btnExportCSV').on('click', function() {
-            window.location.href = getExportUrl('export-csv');
+        try {
+            const response = await fetch(`${baseUrl}admin/absensi/ajax-get-mapel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({ id_kelas, [csrfName]: csrfHash })
+            });
+            const data = await response.json();
+
+            if (data.csrf_hash) csrfHash = data.csrf_hash;
+
+            if (data.status === 'success' && data.mapel?.length) {
+                selectMapel.innerHTML = '<option value="">-- Pilih Mata Pelajaran --</option>';
+                data.mapel.forEach(m => {
+                    selectMapel.innerHTML += `<option value="${m.id_mapel}">${m.nama_mapel}</option>`;
+                });
+                selectMapel.disabled = false;
+            } else {
+                selectMapel.innerHTML = '<option value="">-- Tidak ada mapel terhubung --</option>';
+            }
+        } catch (error) {
+            selectMapel.innerHTML = '<option value="">Gagal memuat mapel</option>';
+        }
+    });
+
+    // Submit filter - load rekap data
+    formFilter.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append(csrfName, csrfHash);
+
+        // Disable buttons & show loading
+        btnTerapkan.disabled = true;
+        btnTerapkan.innerHTML = `
+            <svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Menerapkan...
+        `;
+        btnExportCSV.disabled = true;
+        btnExportPDF.disabled = true;
+
+        container.innerHTML = `
+            <div class="text-center py-12 text-gray-500">
+                <svg class="w-8 h-8 mx-auto text-gray-400 animate-spin mb-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p>Memuat data...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(`${baseUrl}admin/rekap-absensi/tampilkan-data`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            const html = await response.text();
+            container.innerHTML = html;
+            
+            // Enable export buttons
+            btnExportCSV.disabled = false;
+            btnExportPDF.disabled = false;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="p-6 text-center">
+                    <div class="alert alert-danger">Gagal memuat data. Silakan coba lagi.</div>
+                </div>
+            `;
+        } finally {
+            btnTerapkan.disabled = false;
+            btnTerapkan.innerHTML = `
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Terapkan
+            `;
+        }
+    });
+
+    // Helper to get export URL
+    function getExportUrl(format) {
+        const params = new URLSearchParams({
+            tanggal_mulai: document.getElementById('tanggal_mulai').value,
+            tanggal_selesai: document.getElementById('tanggal_selesai').value,
+            id_kelas: selectKelas.value,
+            id_mapel: selectMapel.value
         });
-
-      // Tambah query param
-function addQuery(url, key, value) {
-  const u = new URL(url, window.location.origin);
-  u.searchParams.set(key, value);
-  return u.toString();
-}
-
-// Cari cookie yang namanya 'dl_token' ATAU berakhiran 'dl_token' (kalau ada prefix)
-function hasDownloadCookie(token) {
-  const all = document.cookie ? document.cookie.split(';') : [];
-  for (const pair of all) {
-    const idx = pair.indexOf('=');
-    const name = (idx > -1 ? pair.slice(0, idx) : pair).trim();
-    const val  = (idx > -1 ? pair.slice(idx + 1) : '').trim();
-    if (!name) continue;
-    if (name === 'dl_token' || name.endsWith('dl_token')) {
-      try {
-        if (decodeURIComponent(val) === token) return true;
-      } catch (_) {
-        if (val === token) return true;
-      }
-    }
-  }
-  return false;
-}
-
-// Hapus semua varian cookie dl_token (dengan/ tanpa prefix)
-function clearDownloadCookie() {
-  const all = document.cookie ? document.cookie.split(';') : [];
-  for (const pair of all) {
-    const idx = pair.indexOf('=');
-    const name = (idx > -1 ? pair.slice(0, idx) : pair).trim();
-    if (name === 'dl_token' || name.endsWith('dl_token')) {
-      document.cookie = name + '=; Max-Age=0; path=/';
-    }
-  }
-}
-
-// Handler tombol
-$('#btnExportPDF').off('click').on('click', function () {
-  const $btn = $(this);
-  const baseUrl = getExportUrl('export-pdf'); // punyamu
-  const token   = 'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-  const url     = addQuery(baseUrl, 'dl_token', token);
-
-  // UI: tombol + modal
-  const originalHtml = $btn.html();
-  $btn.prop('disabled', true).html(
-    '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Mengunduh...'
-  );
-  $('#loadingExport').modal('show');
-
-  // Buat iframe tersembunyi untuk trigger download
-  clearDownloadCookie(); // bersihkan sisa cookie lama
-  const $iframe = $('<iframe>', { src: url, style: 'display:none', id: 'dlFrameTmp' });
-  $('body').append($iframe);
-
-  const start = Date.now();
-  const hardTimeout = 120000; // 2 menit (sesuaikan)
-  const softCloseAt = 5000;   // 5 detik -> tutup loader walau cookie belum muncul (fallback utk IDM)
-
-  const timer = setInterval(function () {
-    const elapsed = Date.now() - start;
-
-    // 1) sukses: cookie terdeteksi
-    if (hasDownloadCookie(token)) {
-      clearInterval(timer);
-      clearDownloadCookie();
-      try { $iframe.remove(); } catch (e) {}
-      $('#loadingExport').modal('hide');
-      $btn.prop('disabled', false).html(originalHtml);
-      if (typeof Toast !== 'undefined') Toast.fire({ icon: 'success', title: 'PDF sedang diunduh.' });
-      return;
+        return `${baseUrl}admin/rekap-absensi/${format}?${params}`;
     }
 
-    // 2) fallback: setelah X detik, tutup loader agar tidak menggantung (IDM sering blok Set-Cookie)
-    if (elapsed >= softCloseAt) {
-      clearInterval(timer);
-      try { $iframe.remove(); } catch (e) {}
-      $('#loadingExport').modal('hide');
-      $btn.prop('disabled', false).html(originalHtml);
-      // opsional: kasih info ringan saja, jangan error
-      if (typeof Toast !== 'undefined') Toast.fire({ icon: 'info', title: 'Download dimulai.' });
-      return;
-    }
+    // Export CSV
+    btnExportCSV.addEventListener('click', function() {
+        window.location.href = getExportUrl('export-csv');
+    });
 
-    // 3) benar-benar timeout (server gagal)
-    if (elapsed >= hardTimeout) {
-      clearInterval(timer);
-      try { $iframe.remove(); } catch (e) {}
-      $('#loadingExport').modal('hide');
-      $btn.prop('disabled', false).html(originalHtml);
-      if (typeof Toast !== 'undefined') Toast.fire({ icon: 'error', title: 'Gagal mengunduh (timeout).' });
-      else alert('Gagal mengunduh (timeout).');
-    }
-  }, 300);
-});
+    // Export PDF with loading indicator
+    btnExportPDF.addEventListener('click', function() {
+        const originalHtml = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = `
+            <svg class="w-4 h-4 mr-1.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Mengunduh...
+        `;
 
+        // Show loading modal
+        loadingModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
 
+        // Create hidden iframe to trigger download
+        const token = 'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        const url = getExportUrl('export-pdf') + '&dl_token=' + token;
+        
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+
+        // Close loading after timeout (fallback for download managers)
+        setTimeout(() => {
+            loadingModal.classList.remove('active');
+            document.body.style.overflow = '';
+            this.disabled = false;
+            this.innerHTML = originalHtml;
+            iframe.remove();
+            showToast('Download dimulai', 'info');
+        }, 5000);
     });
 </script>
 <?= $this->endSection() ?>

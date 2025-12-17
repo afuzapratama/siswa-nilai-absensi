@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth' => \App\Filters\AuthFilter::class,
+        'loginthrottle' => \App\Filters\LoginThrottle::class,
     ];
 
     /**
@@ -53,10 +54,10 @@ class Filters extends BaseFilters
     public array $required = [
         'before' => [
             'forcehttps', // Force Global Secure Requests
-            'pagecache',  // Web Page Caching
+            //'pagecache',  // Web Page Caching
         ],
         'after' => [
-            'pagecache',   // Web Page Caching
+            //'pagecache',   // Web Page Caching
             'performance', // Performance Metrics
             'toolbar',     // Debug Toolbar
         ],
@@ -109,10 +110,7 @@ class Filters extends BaseFilters
      * @var array<string, array<string, list<string>>>
      */
     public array $filters = [
-        'auth' => [ // Kita beri nama filter 'auth'
-            'before' => [
-                'admin/*', // Proteksi semua URL yg diawali 'admin/'
-            ]
-        ]
+        // Auth filter sudah diterapkan di Routes.php via group filter
+        // Jangan duplikasi disini untuk menghindari konflik
     ];
 }

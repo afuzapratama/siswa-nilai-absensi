@@ -71,6 +71,7 @@ class MataPelajaran extends BaseController
             return $this->response->setJSON([
                 'status' => 'error',
                 'errors' => $this->mapelModel->errors(),
+                'csrf_hash' => csrf_hash()
             ]);
         }
 
@@ -103,13 +104,15 @@ class MataPelajaran extends BaseController
         if ($this->db->transStatus() === false) {
              return $this->response->setJSON([
                 'status'  => 'error',
-                'message' => 'Gagal menyimpan relasi kelas.'
+                'message' => 'Gagal menyimpan relasi kelas.',
+                'csrf_hash' => csrf_hash()
             ]);
         }
 
         return $this->response->setJSON([
             'status'  => 'success',
-            'message' => 'Data mata pelajaran berhasil disimpan.'
+            'message' => 'Data mata pelajaran berhasil disimpan.',
+            'csrf_hash' => csrf_hash()
         ]);
     }
 
@@ -127,7 +130,7 @@ class MataPelajaran extends BaseController
         // 1. Ambil data mapel
         $dataMapel = $this->mapelModel->find($id_mapel);
         if (!$dataMapel) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.', 'csrf_hash' => csrf_hash()]);
         }
 
         // 2. Ambil data kelas yang terhubung (hanya ID-nya)
@@ -138,7 +141,8 @@ class MataPelajaran extends BaseController
         return $this->response->setJSON([
             'status' => 'success', 
             'data_mapel' => $dataMapel,
-            'kelas_ids' => $kelas_terhubung ?? [] // Kirim array ID kelas
+            'kelas_ids' => $kelas_terhubung ?? [],
+            'csrf_hash' => csrf_hash()
         ]);
     }
 
@@ -158,11 +162,12 @@ class MataPelajaran extends BaseController
             // Relasi di 'mapel_kelas' akan terhapus otomatis
             // berkat ON DELETE CASCADE di database migration
             $this->mapelModel->delete($id);
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Data mapel berhasil dihapus.']);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Data mapel berhasil dihapus.', 'csrf_hash' => csrf_hash()]);
         } catch (\Exception $e) {
             return $this->response->setJSON([
                 'status'  => 'error',
-                'message' => 'Gagal menghapus data. Mapel ini mungkin sudah memiliki data nilai.'
+                'message' => 'Gagal menghapus data. Mapel ini mungkin sudah memiliki data nilai.',
+                'csrf_hash' => csrf_hash()
             ]);
         }
     }

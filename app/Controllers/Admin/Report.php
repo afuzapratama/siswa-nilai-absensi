@@ -51,7 +51,7 @@ class Report extends BaseController
             'title'      => 'Laporan Penilaian Siswa',
             'kelas_list' => $this->kelasModel->getKelasByTahunAjaran($ta_aktif['id_tahun_ajaran']),
         ];
-        return view('admin/report', $data); // View: report.php
+        return view('admin/report', $data); // View: report_new.php (Tailwind)
     }
 
     /**
@@ -66,13 +66,13 @@ class Report extends BaseController
 
         $id_kelas = $this->request->getPost('id_kelas');
         if (!$id_kelas) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.', 'csrf_hash' => csrf_hash()]);
         }
 
         // Gunakan model pivot untuk mengambil mapel
         $mapel = $this->mapelKelasModel->getMapelByKelas($id_kelas);
 
-        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel]);
+        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel, 'csrf_hash' => csrf_hash()]);
     }
 
 
@@ -92,7 +92,7 @@ class Report extends BaseController
 
         $data = $this->penilaianHeaderModel->getJudulByKelas($id_kelas, $id_mapel, $ta_aktif['id_tahun_ajaran']);
 
-        return $this->response->setJSON($data);
+        return $this->response->setJSON(['status' => 'success', 'data' => $data, 'csrf_hash' => csrf_hash()]);
     }
 
     /**
@@ -114,7 +114,10 @@ class Report extends BaseController
 
         $data = $this->penilaianHeaderModel->getReportData($id_kelas, $id_header_array);
 
-        return view('admin/partials/report_table', $data);
+        // Add CSRF hash to response header for HTML response
+        return $this->response
+            ->setHeader('X-CSRF-Hash', csrf_hash())
+            ->setBody(view('admin/partials/report_table', $data));
     }
 
     /**
@@ -294,7 +297,7 @@ class Report extends BaseController
             'title'      => 'Rekap Kehadiran Siswa',
             'kelas_list' => $this->kelasModel->getKelasByTahunAjaran($ta_aktif['id_tahun_ajaran']),
         ];
-        return view('admin/rekap_absensi', $data); // View: rekap_absensi.php
+        return view('admin/rekap_absensi', $data);
     }
 
     /**

@@ -81,12 +81,12 @@ class Penilaian extends BaseController
 
         $id_kelas = $this->request->getPost('id_kelas');
         if (!$id_kelas) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.', 'csrf_hash' => csrf_hash()]);
         }
 
         $mapel = $this->mapelKelasModel->getMapelByKelas($id_kelas);
 
-        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel]);
+        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel, 'csrf_hash' => csrf_hash()]);
     }
 
 
@@ -150,12 +150,28 @@ class Penilaian extends BaseController
             $nilai_map[$nilai['id_siswa']][$nilai['id_kolom']] = $nilai['nilai'];
         }
 
+        // 5. Hitung rata-rata per siswa
+        $rata_rata = [];
+        foreach ($siswa_list as $siswa) {
+            $total = 0;
+            $count = 0;
+            foreach ($kolom_list as $kolom) {
+                if (isset($nilai_map[$siswa['id_siswa']][$kolom['id_kolom']])) {
+                    $total += (float) $nilai_map[$siswa['id_siswa']][$kolom['id_kolom']];
+                    $count++;
+                }
+            }
+            $rata_rata[$siswa['id_siswa']] = $count > 0 ? ($total / $count) : null;
+        }
+
         $data = [
             'title'      => 'Input Nilai: ' . esc($header['judul_penilaian']),
             'header'     => $header,
             'siswa_list' => $siswa_list,
             'kolom_list' => $kolom_list,
+            'nilai_list' => $nilai_tercatat,
             'nilai_map'  => $nilai_map,
+            'rata_rata'  => $rata_rata,
         ];
         return view('admin/penilaian_form_input', $data);
     }
@@ -184,7 +200,8 @@ class Penilaian extends BaseController
         if ($this->kolomModel->where(['id_header' => $id_header, 'nama_kolom' => $nama_kolom_baru])->first()) {
             return $this->response->setJSON([
                 'status'  => 'error',
-                'message' => 'Nama kolom sudah dipakai.'
+                'message' => 'Nama kolom sudah dipakai.',
+                'csrf_hash' => csrf_hash()
             ]);
         }
 
@@ -200,10 +217,40 @@ class Penilaian extends BaseController
                 'id_kolom'   => $id_kolom,
                 'nama_kolom' => $nama_kolom_baru,
                 'urutan'     => $urutan_baru,
+                'csrf_hash'  => csrf_hash()
             ]);
         }
 
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambah kolom.']);
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambah kolom.', 'csrf_hash' => csrf_hash()]);
+    }
+
+    /**
+     * [AJAX] Update nama kolom nilai
+     */
+    public function updateKolom()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        $id_kolom = $this->request->getPost('id_kolom');
+        $nama_kolom = trim((string) $this->request->getPost('nama_kolom'));
+
+        if (empty($nama_kolom)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Nama kolom tidak boleh kosong.',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        $this->kolomModel->update($id_kolom, ['nama_kolom' => $nama_kolom]);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Nama kolom berhasil diperbarui.',
+            'csrf_hash' => csrf_hash()
+        ]);
     }
     
     /**
@@ -222,7 +269,7 @@ class Penilaian extends BaseController
         // Hapus kolom
         $this->kolomModel->delete($id_kolom);
 
-        return $this->response->setJSON(['status' => 'success']);
+        return $this->response->setJSON(['status' => 'success', 'csrf_hash' => csrf_hash()]);
     }
 
 
@@ -251,9 +298,22 @@ class Penilaian extends BaseController
                     'id_kolom'  => $data['id_kolom'],
                     'id_siswa'  => $data['id_siswa']
                 ])->delete();
-                return $this->response->setJSON(['status' => 'deleted']);
+                
+                // Hitung rata-rata setelah hapus
+                $rata_rata = $this->hitungRataRataSiswa($data['id_header'], $data['id_siswa']);
+                
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'action' => 'deleted',
+                    'rata_rata' => $rata_rata,
+                    'csrf_hash' => csrf_hash()
+                ]);
             }
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Nilai harus antara 0-100.']);
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Nilai harus antara 0-100.',
+                'csrf_hash' => csrf_hash()
+            ]);
         }
 
         // Cek apakah data sudah ada (UPSERT)
@@ -266,12 +326,46 @@ class Penilaian extends BaseController
         if ($existing) {
             // UPDATE
             $this->detailModel->update($existing['id_detail'], ['nilai' => $data['nilai']]);
-            return $this->response->setJSON(['status' => 'updated']);
         } else {
             // INSERT
             $this->detailModel->insert($data);
-            return $this->response->setJSON(['status' => 'created']);
         }
+
+        // Hitung rata-rata siswa
+        $rata_rata = $this->hitungRataRataSiswa($data['id_header'], $data['id_siswa']);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'action' => $existing ? 'updated' : 'created',
+            'rata_rata' => $rata_rata,
+            'csrf_hash' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * Hitung rata-rata nilai siswa
+     */
+    private function hitungRataRataSiswa($id_header, $id_siswa)
+    {
+        $nilai_siswa = $this->detailModel
+            ->where('id_header', $id_header)
+            ->where('id_siswa', $id_siswa)
+            ->findAll();
+
+        if (empty($nilai_siswa)) {
+            return null;
+        }
+
+        $total = 0;
+        $count = 0;
+        foreach ($nilai_siswa as $n) {
+            if ($n['nilai'] !== null && $n['nilai'] !== '') {
+                $total += (float) $n['nilai'];
+                $count++;
+            }
+        }
+
+        return $count > 0 ? ($total / $count) : null;
     }
 
     /**
@@ -290,6 +384,10 @@ class Penilaian extends BaseController
         $this->kolomModel->where('id_header', $id_header)->delete();
         $this->headerModel->delete($id_header);
 
-        return $this->response->setJSON(['status' => 'success', 'message' => 'Form penilaian berhasil dihapus.']);
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Form penilaian berhasil dihapus.',
+            'csrf_hash' => csrf_hash()
+        ]);
     }
 }

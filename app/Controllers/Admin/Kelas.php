@@ -65,13 +65,15 @@ class Kelas extends BaseController
             // Gagal validasi
             return $this->response->setJSON([
                 'status'  => 'error',
-                'errors'  => $this->kelasModel->errors()
+                'errors'  => $this->kelasModel->errors(),
+                'csrf_hash' => csrf_hash()
             ]);
         } else {
             // Sukses
             return $this->response->setJSON([
                 'status'  => 'success',
-                'message' => 'Data kelas berhasil ditambahkan.'
+                'message' => 'Data kelas berhasil ditambahkan.',
+                'csrf_hash' => csrf_hash()
             ]);
         }
     }
@@ -87,12 +89,14 @@ class Kelas extends BaseController
         if ($this->kelasModel->delete($id)) {
             return $this->response->setJSON([
                 'status'  => 'success',
-                'message' => 'Data kelas berhasil dihapus.'
+                'message' => 'Data kelas berhasil dihapus.',
+                'csrf_hash' => csrf_hash()
             ]);
         } else {
             return $this->response->setJSON([
                 'status'  => 'error',
-                'message' => 'Gagal menghapus data.'
+                'message' => 'Gagal menghapus data.',
+                'csrf_hash' => csrf_hash()
             ]);
         }
     }

@@ -23,7 +23,7 @@ class Settings extends BaseController
             'title'    => 'Settings Aplikasi',
             'settings' => $this->settingsModel->getSettings() // Menggunakan fungsi 'getSettings' (plural)
         ];
-        return view('admin/settings_page', $data);
+        return view('admin/settings_page', $data); // Tailwind version
     }
 
     /**

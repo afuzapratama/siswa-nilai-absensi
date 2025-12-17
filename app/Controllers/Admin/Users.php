@@ -23,7 +23,7 @@ class Users extends BaseController
             'title' => 'Manajemen User',
             'users' => $this->userModel->findAll()
         ];
-        return view('admin/users', $data);
+        return view('admin/users', $data); // Tailwind version
     }
 
     /**

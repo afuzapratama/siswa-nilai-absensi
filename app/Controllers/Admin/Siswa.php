@@ -77,7 +77,7 @@ class Siswa extends BaseController
             'id_kelas' => $id_kelas,
         ]);
 
-        $links = $pager ? $pager->links('siswa', 'bootstrap4_full') : '';
+        $links = $pager ? $pager->links('siswa', 'tailwind_full') : '';
 
         return $this->response->setJSON([
             'rows'  => $rows,
@@ -111,13 +111,15 @@ class Siswa extends BaseController
         if ($this->siswaModel->save($data) === false) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'errors' => $this->siswaModel->errors()
+                'errors' => $this->siswaModel->errors(),
+                'csrf_hash' => csrf_hash()
             ]);
         }
 
         return $this->response->setJSON([
             'status'  => 'success',
-            'message' => 'Data siswa berhasil disimpan!'
+            'message' => 'Data siswa berhasil disimpan!',
+            'csrf_hash' => csrf_hash()
         ]);
     }
 
@@ -134,10 +136,10 @@ class Siswa extends BaseController
         $data = $this->siswaModel->find($id_siswa);
 
         if (!$data) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data siswa tidak ditemukan.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data siswa tidak ditemukan.', 'csrf_hash' => csrf_hash()]);
         }
 
-        return $this->response->setJSON(['status' => 'success', 'data' => $data]);
+        return $this->response->setJSON(['status' => 'success', 'data' => $data, 'csrf_hash' => csrf_hash()]);
     }
 
     /**
@@ -152,10 +154,10 @@ class Siswa extends BaseController
         $id_siswa = $this->request->getPost('id_siswa');
 
         if ($this->siswaModel->delete($id_siswa)) {
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Data siswa berhasil dihapus.']);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Data siswa berhasil dihapus.', 'csrf_hash' => csrf_hash()]);
         }
 
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data siswa.']);
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data siswa.', 'csrf_hash' => csrf_hash()]);
     }
 
     /**
@@ -261,7 +263,8 @@ class Siswa extends BaseController
 
         return $this->response->setJSON([
             'status' => 'success',
-            'message' => $message
+            'message' => $message,
+            'csrf_hash' => csrf_hash()
         ]);
     }
 }

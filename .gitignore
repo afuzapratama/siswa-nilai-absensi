@@ -124,3 +124,5 @@ _modules/*
 
 /results/
 /phpunit*.xml
+_backup/
+node_modules/

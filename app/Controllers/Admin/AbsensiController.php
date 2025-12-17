@@ -57,13 +57,13 @@ class AbsensiController extends BaseController
 
         $id_kelas = $this->request->getPost('id_kelas');
         if (!$id_kelas) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Kelas tidak ada.', 'csrf_hash' => csrf_hash()]);
         }
 
         // Gunakan model pivot untuk mengambil mapel
         $mapel = $this->mapelKelasModel->getMapelByKelas($id_kelas);
 
-        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel]);
+        return $this->response->setJSON(['status' => 'success', 'mapel' => $mapel, 'csrf_hash' => csrf_hash()]);
     }
 
     /**
@@ -125,7 +125,7 @@ class AbsensiController extends BaseController
         $tanggal  = $this->request->getPost('tanggal');
 
         if (!$id_ta || !$id_kelas || !$id_mapel || !$id_siswa || !$tanggal) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrf_hash' => csrf_hash()]);
         }
 
         $absen = $this->absensiModel
@@ -146,7 +146,8 @@ class AbsensiController extends BaseController
                 'status'     => $absen['status'] ?? null,
                 'catatan'    => $absen['catatan'] ?? '',
                 'bukti'      => $buktiUrl
-            ]
+            ],
+            'csrf_hash' => csrf_hash()
         ]);
     }
 
@@ -166,10 +167,10 @@ class AbsensiController extends BaseController
         $hapusBukti = $this->request->getPost('hapus_bukti'); // '1' kalau mau hapus
 
         if (!$id_ta || !$id_kelas || !$id_mapel || !$id_siswa || !$tanggal || !in_array($status, ['I', 'S'])) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap / status tidak valid']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap / status tidak valid', 'csrf_hash' => csrf_hash()]);
         }
         if (empty($catatan)) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Catatan wajib diisi']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Catatan wajib diisi', 'csrf_hash' => csrf_hash()]);
         }
 
         $kriteria = [
@@ -190,10 +191,10 @@ class AbsensiController extends BaseController
             $mime = $file->getMimeType();
             $okMime = ['image/jpeg', 'image/png', 'image/webp'];
             if (!in_array($mime, $okMime)) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Bukti harus gambar JPG/PNG/WEBP']);
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Bukti harus gambar JPG/PNG/WEBP', 'csrf_hash' => csrf_hash()]);
             }
             if ($file->getSizeByUnit('mb') > 4) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Bukti max 4MB']);
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Bukti max 4MB', 'csrf_hash' => csrf_hash()]);
             }
 
             $subdir = 'uploads/absensi/' . date('Y/m') . '/';
@@ -240,7 +241,8 @@ class AbsensiController extends BaseController
             'status' => 'success',
             'action' => $action,
             'id_absensi' => $idAbsensi,
-            'bukti' => isset($dataSave['bukti']) && $dataSave['bukti'] ? base_url($dataSave['bukti']) : null
+            'bukti' => isset($dataSave['bukti']) && $dataSave['bukti'] ? base_url($dataSave['bukti']) : null,
+            'csrf_hash' => csrf_hash()
         ]);
     }
     /**
@@ -260,10 +262,10 @@ class AbsensiController extends BaseController
         $status   = $this->request->getPost('status'); // 'H' atau 'A' (I/S pakai modal terpisah)
 
         if (!$id_ta || !$id_kelas || !$id_mapel || !$id_siswa || !$tanggal) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap.', 'csrf_hash' => csrf_hash()]);
         }
         if ($status === 'I' || $status === 'S') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gunakan modal untuk Izin/Sakit.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gunakan modal untuk Izin/Sakit.', 'csrf_hash' => csrf_hash()]);
         }
 
         $kriteria = [
@@ -279,21 +281,21 @@ class AbsensiController extends BaseController
             if ($existing) {
                 if (empty($status) || $status == 'null') {
                     $this->absensiModel->delete($existing['id_absensi']);
-                    return $this->response->setJSON(['status' => 'success', 'message' => 'Dihapus', 'action' => 'deleted']);
+                    return $this->response->setJSON(['status' => 'success', 'message' => 'Dihapus', 'action' => 'deleted', 'csrf_hash' => csrf_hash()]);
                 } else {
                     $this->absensiModel->update($existing['id_absensi'], ['status' => $status]);
-                    return $this->response->setJSON(['status' => 'success', 'message' => 'Diupdate', 'action' => 'updated']);
+                    return $this->response->setJSON(['status' => 'success', 'message' => 'Diupdate', 'action' => 'updated', 'csrf_hash' => csrf_hash()]);
                 }
             } else {
                 if (!empty($status) && $status != 'null') {
                     $data = $kriteria + ['status' => $status, 'catatan' => null, 'bukti' => null];
                     $this->absensiModel->insert($data);
-                    return $this->response->setJSON(['status' => 'success', 'message' => 'Disimpan', 'action' => 'inserted']);
+                    return $this->response->setJSON(['status' => 'success', 'message' => 'Disimpan', 'action' => 'inserted', 'csrf_hash' => csrf_hash()]);
                 }
             }
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Tidak ada perubahan', 'action' => 'nothing']);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Tidak ada perubahan', 'action' => 'nothing', 'csrf_hash' => csrf_hash()]);
         } catch (\Exception $e) {
-            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage(), 'csrf_hash' => csrf_hash()]);
         }
     }
 }

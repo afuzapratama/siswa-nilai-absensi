@@ -34,7 +34,7 @@ $routes->get('/', 'Home::index');
 
 // Rute Autentikasi
 $routes->get('login', 'Auth\AuthController::login');
-$routes->post('login/process', 'Auth\AuthController::processLogin');
+$routes->post('login/process', 'Auth\AuthController::processLogin', ['filter' => 'loginthrottle']);
 $routes->get('logout', 'Auth\AuthController::logout');
 
 // Grup Rute Admin (Diproteksi oleh Filter Auth)
@@ -85,8 +85,10 @@ $routes->group('admin', ['filter' => 'auth'], static function ($routes) {
         // Rute AJAX
         $routes->post('get-mapel', 'Admin\Penilaian::ajaxGetMapel');
         $routes->post('add-kolom', 'Admin\Penilaian::addKolom');
+        $routes->post('update-kolom', 'Admin\Penilaian::updateKolom');
         $routes->post('delete-kolom', 'Admin\Penilaian::deleteKolom');
         $routes->post('save-nilai', 'Admin\Penilaian::saveNilai');
+        $routes->post('delete-form', 'Admin\Penilaian::deleteForm');
     });
 
     // Laporan (Nilai)

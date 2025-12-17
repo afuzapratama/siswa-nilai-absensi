@@ -44,7 +44,8 @@ class TahunAjaran extends BaseController
         if (!$this->validate($rules)) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'errors' => $this->validator->getErrors()
+                'errors' => $this->validator->getErrors(),
+                'csrf_hash' => csrf_hash()
             ]);
         }
 
@@ -64,9 +65,9 @@ class TahunAjaran extends BaseController
                 $message = 'Data tahun ajaran berhasil diperbarui.';
             }
 
-            return $this->response->setJSON(['status' => 'success', 'message' => $message]);
+            return $this->response->setJSON(['status' => 'success', 'message' => $message, 'csrf_hash' => csrf_hash()]);
         } catch (\Exception $e) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage(), 'csrf_hash' => csrf_hash()]);
         }
     }
 
@@ -83,9 +84,9 @@ class TahunAjaran extends BaseController
         $data = $this->TahunAjaranModel->find($id);
 
         if ($data) {
-            return $this->response->setJSON(['status' => 'success', 'data' => $data]);
+            return $this->response->setJSON(['status' => 'success', 'data' => $data, 'csrf_hash' => csrf_hash()]);
         } else {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.', 'csrf_hash' => csrf_hash()]);
         }
     }
 
@@ -102,10 +103,10 @@ class TahunAjaran extends BaseController
 
         try {
             $this->TahunAjaranModel->delete($id);
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Data berhasil dihapus.']);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Data berhasil dihapus.', 'csrf_hash' => csrf_hash()]);
         } catch (\Exception $e) {
             // Tangani jika ada foreign key constraint
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data. Data mungkin sedang digunakan di tabel lain.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data. Data mungkin sedang digunakan di tabel lain.', 'csrf_hash' => csrf_hash()]);
         }
     }
 
@@ -121,9 +122,9 @@ class TahunAjaran extends BaseController
         $id = $this->request->getPost('id');
 
         if ($this->TahunAjaranModel->setAktif($id)) {
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Status tahun ajaran berhasil diaktifkan.']);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Status tahun ajaran berhasil diaktifkan.', 'csrf_hash' => csrf_hash()]);
         } else {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui status.']);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui status.', 'csrf_hash' => csrf_hash()]);
         }
     }
 }
